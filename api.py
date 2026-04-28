@@ -10,7 +10,7 @@ app = FastAPI()
 # ✅ CORS (VERY IMPORTANT for Netlify UI)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # later restrict to your Netlify URL
+    allow_origins=["https://srproskillbridge.in"],  # later restrict to your Netlify URL
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
