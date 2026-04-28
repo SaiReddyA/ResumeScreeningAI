@@ -1,7 +1,5 @@
 fastapi
 uvicorn
-spacy
 scikit-learn
-sentence-transformers
 PyPDF2
 python-multipart

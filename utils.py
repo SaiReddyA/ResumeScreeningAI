@@ -1,29 +1,54 @@
 from PyPDF2 import PdfReader
-import spacy
-from sentence_transformers import SentenceTransformer, util
+import os
 
-nlp = spacy.load("en_core_web_sm")
-model = SentenceTransformer('all-MiniLM-L6-v2')
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
 
+# 📄 Extract text from PDF
 def extract_text_from_pdf(file_path):
+    if not os.path.exists(file_path):
+        raise Exception("File not found")
+
+    if os.path.getsize(file_path) == 0:
+        raise Exception("PDF file is empty")
+
     reader = PdfReader(file_path)
     text = ""
+
     for page in reader.pages:
-        if page.extract_text():
-            text += page.extract_text()
+        page_text = page.extract_text()
+        if page_text:
+            text += page_text
+
     return text
 
 
+# 🧠 Lightweight text preprocessing (NO spaCy)
 def preprocess(text):
-    doc = nlp(text.lower())
-    tokens = [token.lemma_ for token in doc if token.is_alpha and not token.is_stop]
-    return " ".join(tokens)
+    text = text.lower()
+    words = text.split()
+
+    # basic stop words
+    stop_words = {
+        "the", "is", "in", "and", "to", "of", "a", "for",
+        "on", "with", "as", "by", "an", "be", "this", "that"
+    }
+
+    words = [
+        word for word in words
+        if word.isalpha() and word not in stop_words
+    ]
+
+    return " ".join(words)
 
 
+# 📊 Similarity using TF-IDF
 def semantic_similarity(resume, jd):
-    emb1 = model.encode(resume, convert_to_tensor=True)
-    emb2 = model.encode(jd, convert_to_tensor=True)
+    vectorizer = TfidfVectorizer()
 
-    score = util.cos_sim(emb1, emb2)
-    return round(float(score) * 100, 2)
+    vectors = vectorizer.fit_transform([resume, jd])
+
+    score = cosine_similarity(vectors[0:1], vectors[1:2]) # type: ignore
+
+    return round(score[0][0] * 100, 2)
